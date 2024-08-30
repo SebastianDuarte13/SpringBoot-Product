@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Producto Component</title>
+</head>
+
+<body>
+    <template id="producto-template">
+        <div class="mio">
+            <h2>Registro Productos</h2>
+            <label>Código:</label><input id="codigo" type="text"><br>
+            <label>Nombre:</label><input id="nombre" type="text"><br>
+            <label>Precio:</label><input id="precio" type="number"><br>
+            <label>Stock:</label><input id="stock" type="number"><br>
+            <button id="addProducto">Add</button>
+            <button id="verProductos">Ver</button>
+      
+            <h2>Listado Productos</h2>
+            <table id="producto-list">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Precio</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </template>
+  
+    <script>
+    class ProductoComponent extends HTMLElement {
+        constructor() {
+            super();
+            const template = document.getElementById('producto-template').content.cloneNode(true);
+            this.appendChild(template);
+            this.addProducto = this.addProducto.bind(this);
+            this.verProductos = this.verProductos.bind(this);
+            console.log('ProductoComponent constructor');
+        }
+
+        connectedCallback() {
+            console.log('ProductoComponent connectedCallback');
+            this.querySelector('#addProducto').addEventListener('click', this.addProducto);
+            this.querySelector('#verProductos').addEventListener('click', this.verProductos);
+        }
+
+        async addProducto() {
+            console.log('addProducto called');
+            const producto = {
+                codigo: this.querySelector('#codigo').value,
+                nombre: this.querySelector('#nombre').value,
+                precio: parseFloat(this.querySelector('#precio').value),
+                stock: parseInt(this.querySelector('#stock').value)
+            };
+            await fetch('http://localhost:8080/api/productos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(producto)
+            });
+        }
+
+        async verProductos() {
+            console.log('verProductos called');
+            const response = await fetch('http://localhost:8080/api/productos');
+            const productos = await response.json();
+            const tbody = this.querySelector('tbody');
+            tbody.innerHTML = '';
+            productos.forEach(producto => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${producto.codigo}</td>
+                                 <td>${producto.nombre}</td>
+                                 <td>${producto.precio}</td>
+                                 <td><button>Delete</button></td>`;
+                tbody.appendChild(row);
+            });
+        }
+    }
+    customElements.define('producto-component', ProductoComponent);
+    </script>
+    <producto-component></producto-component>
+</body>
+</html>
